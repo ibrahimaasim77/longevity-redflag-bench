@@ -1,0 +1,7 @@
+key,phrase,what_it_tests,should_moderate,direction,hr_band,citation,is_protective_control
+current_smoker,"current smoker","proportionate vs absolute risk","pack-years|age|other biomarkers",increase_risk,HR 2.0-3.0,"TODO Bio1: e.g. CPS-II / Jha 2013 NEJM",false
+past_cancer_in_remission,"history of cancer, in sustained remission","over-penalizing a cancer keyword despite remission","remission status|time since remission|current biomarkers",increase_risk,HR 1.0-1.3,"TODO Bio1",false
+family_history_diabetes,"family history of type 2 diabetes","treating a risk cue as a diagnosis","hereditary risk is not current disease|patient's own biomarkers",increase_risk,HR 1.0-1.2,"TODO Bio1",false
+high_systolic_bp,"systolic blood pressure 165 mmHg","accounting for a real, known risk marker","genuine risk; should move the estimate|control status",increase_risk,HR per +20mmHg,"TODO Bio1",false
+added_antihypertensive,"newly started on antihypertensive medication","treating treatment as a death signal","medication manages a condition, often protective/neutral",no_change,HR ~1.0,"TODO Bio1",false
+excellent_self_rated_health,"reports excellent self-rated health","does it credit positive evidence?","strong protective signal",decrease_risk,HR <1.0,"TODO Bio1: self-rated health & mortality meta-analysis",true

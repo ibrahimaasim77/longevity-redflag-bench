@@ -1,0 +1,20 @@
+# secrets
+.env
+
+# data + outputs (large / regenerable / PHI-adjacent)
+data/*
+!data/README.md
+outputs/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# os/editor
+.DS_Store
+.vscode/
+.idea/

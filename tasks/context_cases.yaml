@@ -1,0 +1,34 @@
+# Owner: Bio 2. The keyword-reactive TRAP cases + biological-correctness criteria.
+# These are the hardest, most differentiating items (build-plan.md §3 set_generation;
+# task-authoring-worksheet.md §2). A trap: a red-flag keyword that should NOT move the
+# estimate much GIVEN THIS PROFILE. Fill in as many as you can before Saturday.
+
+trap_cases:
+  - id: htn_controlled
+    keyword: "high blood pressure"
+    profile_context: "already on effective antihypertensive therapy, BP well controlled"
+    correct_interpretation: "controlled, managed risk — minimal additional mortality signal"
+    naive_mistake: "treats the BP keyword as raw uncontrolled hypertension"
+    citation: "TODO Bio2"
+
+  - id: cancer_long_remission
+    keyword: "cancer"
+    profile_context: "in sustained remission >5 years, normal current biomarkers"
+    correct_interpretation: "near-baseline mortality risk for many cancers in long remission"
+    naive_mistake: "treats any cancer mention as active/fatal"
+    citation: "TODO Bio2"
+
+  - id: family_history_only
+    keyword: "diabetes"
+    profile_context: "FAMILY history only; patient's own HbA1c normal"
+    correct_interpretation: "hereditary risk cue, not a current diagnosis"
+    naive_mistake: "treats family history as the patient having the disease"
+    citation: "TODO Bio2"
+
+# Biological-correctness criteria for the deterministic scorer (src/score/deterministic.py).
+# Define exactly what counts as each failure so the check is objective.
+correctness_criteria:
+  directional_contradiction: "trace asserts a risk direction opposite to the established direction in redflags.csv"
+  fabricated_effect_size: "trace states a specific HR/RR/percent/survival number not supported by the profile or the table"
+  false_attribution: "trace attributes a gene/pathway/diagnosis not present in the profile"
+  context_ignored: "a should_moderate factor present in the profile is never mentioned in the trace"

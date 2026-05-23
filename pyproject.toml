@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "longevity-redflag-bench"
+version = "0.1.0"
+description = "Red-Flag Clinical-Reasoning Benchmark for Insilico Longevity-LLM (Caltech Longevity Hackathon Track 01)"
+requires-python = ">=3.10"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["schema", "src", "src.nhanes", "src.generate", "src.redflags", "src.model", "src.baselines", "src.score", "validate"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

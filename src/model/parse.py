@@ -1,24 +1,23 @@
-"""Answer extraction from raw model output. Robust by design — a 9B model formats
-poorly. Every parse returns a structured result with a `failure_type`; it never raises.
+"""Answer extraction from raw model output, matching the LongevityBench answer
+conventions (gold = option LETTER for classification/pairwise; number for regression;
+comma/again list for generation). Robust by design — a 9B model formats poorly. Every
+parse returns a structured result with a `failure_type`; it never raises.
 
-The `failure_type` field is also the data behind the parse-success metric
-(grading-rubric-spec.md §4) that the LongevityBench paper says it lacks.
+`failure_type` is also the data behind the parse-success metric (grading-rubric-spec §4).
 """
 
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass
 from typing import List, Optional
 
-from schema.records import AnswerFormat
+from schema.records import Format
 
 
 @dataclass
 class ParsedAnswer:
-    answer: object                 # str | float | list[str] | None
-    reasoning: Optional[str]
+    answer: object                 # "A".. | float | list[str] | None
     failure_type: Optional[str]    # None=ok | "malformed" | "refusal" | "missing"
     raw: str
 
@@ -30,85 +29,50 @@ class ParsedAnswer:
 _REFUSAL = re.compile(r"\b(i (cannot|can't|won't)|as an ai|unable to)\b", re.I)
 
 
-def _maybe_json(text: str) -> Optional[dict]:
-    # tolerate code fences and trailing commas
-    m = re.search(r"\{.*\}", text, re.S)
-    if not m:
-        return None
-    blob = re.sub(r",\s*([}\]])", r"\1", m.group(0))
-    try:
-        return json.loads(blob)
-    except Exception:
-        return None
-
-
-def parse(raw: str, fmt: AnswerFormat) -> ParsedAnswer:
+def parse(raw: str, fmt: Format) -> ParsedAnswer:
     text = (raw or "").strip()
     if not text:
-        return ParsedAnswer(None, None, "missing", raw)
+        return ParsedAnswer(None, "missing", raw)
     if _REFUSAL.search(text) and len(text) < 240:
-        return ParsedAnswer(None, None, "refusal", raw)
-
-    obj = _maybe_json(text)
-    reasoning = obj.get("reasoning") if obj else None
-    candidate = obj.get("answer") if obj else None
-
+        return ParsedAnswer(None, "refusal", raw)
     try:
-        if fmt == AnswerFormat.binary:
-            ans = _extract_binary(candidate, text)
-        elif fmt in (AnswerFormat.ternary, AnswerFormat.multiple_choice):
-            ans = _extract_choice(candidate, text)
-        elif fmt == AnswerFormat.pairwise:
-            ans = _extract_pairwise(candidate, text)
-        elif fmt == AnswerFormat.regression:
-            ans = _extract_number(candidate, text)
-        elif fmt == AnswerFormat.set_generation:
-            ans = _extract_set(candidate, text)
-        else:
-            ans = candidate
+        if fmt == Format.regression:
+            ans = _number(text)
+        elif fmt == Format.generation:
+            ans = _set(text)
+        else:  # binary | multiclass | ternary | pairwise -> option letter
+            ans = _letter(text)
     except Exception:
-        return ParsedAnswer(None, reasoning, "malformed", raw)
-
-    if ans is None:
-        return ParsedAnswer(None, reasoning, "malformed", raw)
-    return ParsedAnswer(ans, reasoning, None, raw)
+        return ParsedAnswer(None, "malformed", raw)
+    return ParsedAnswer(ans, None if ans is not None else "malformed", raw)
 
 
-# --- per-format extractors (extend as you see real outputs) ----------------- #
-def _extract_binary(candidate, text):
-    s = str(candidate if candidate is not None else text).lower()
-    if re.search(r"\b(yes|survives?|alive|true|1)\b", s):
-        return "yes"
-    if re.search(r"\b(no|dies?|deceased|false|0)\b", s):
-        return "no"
-    return None
+def _letter(text: str) -> Optional[str]:
+    # The answer follows the thinking block; restrict to the region AFTER the last
+    # </think> so stray "Patient A/B" mentions inside the reasoning can't be grabbed
+    # (fixes the first-match mis-grade — vault ERR-20260523-002).
+    region = text.rsplit("</think>", 1)[-1] if "</think>" in text else text
+    # explicit "Answer: B" / "(B)" in the answer region
+    m = re.search(r"\b(?:answer|option)\s*[:=]?\s*\(?([A-E])\)?", region, re.I)
+    if m:
+        return m.group(1).upper()
+    # leading bare letter
+    m = re.match(r"\(?([A-E])\)?[\.\):]?\b", region.strip(), re.I)
+    if m:
+        return m.group(1).upper()
+    # fallback: the LAST standalone A-E in the answer region (the verdict comes last)
+    matches = re.findall(r"\b([A-E])\b", region)
+    return matches[-1].upper() if matches else None
 
 
-def _extract_choice(candidate, text):
-    s = str(candidate if candidate is not None else text).lower()
-    for label in ("low", "medium", "moderate", "high"):
-        if re.search(rf"\b{label}\b", s):
-            return "medium" if label == "moderate" else label
-    return None
-
-
-def _extract_pairwise(candidate, text):
-    s = str(candidate if candidate is not None else text).upper()
-    m = re.search(r"\b(A|B)\b", s)
-    return m.group(1) if m else None
-
-
-def _extract_number(candidate, text):
-    if isinstance(candidate, (int, float)):
-        return float(candidate)
-    m = re.search(r"-?\d+(\.\d+)?", str(candidate if candidate is not None else text))
+def _number(text: str) -> Optional[float]:
+    m = re.search(r"-?\d+(\.\d+)?", text)
     return float(m.group(0)) if m else None
 
 
-def _extract_set(candidate, text) -> Optional[List[str]]:
-    if isinstance(candidate, list):
-        return [str(x).strip() for x in candidate]
-    # fall back to comma/newline separated
-    items = re.split(r"[,\n;]", str(candidate if candidate is not None else text))
-    items = [i.strip(" -*•").lower() for i in items if i.strip()]
+def _set(text: str) -> Optional[List[str]]:
+    # strip a JSON-ish wrapper if present, then split on commas/newlines/semicolons
+    body = re.sub(r"^.*?[:\[]", "", text, count=1) if (":" in text or "[" in text) else text
+    items = [i.strip(" -*•\"'[]").lower() for i in re.split(r"[,\n;]", body)]
+    items = [i for i in items if i]
     return items or None

@@ -27,7 +27,7 @@ def _client():
 
     return OpenAI(
         base_url=config.LONGEVITY_BASE_URL,
-        api_key=config.require("HF_TOKEN", config.HF_TOKEN),
+        api_key=config.require("MODEL_ACCESS_TOKEN", config.MODEL_ACCESS_TOKEN),
     )
 
 

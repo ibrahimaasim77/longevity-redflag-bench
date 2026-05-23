@@ -15,19 +15,20 @@ from src import config
 from src.model.client import chat
 
 PROBE = [
-    {"role": "system", "content": "You are a clinical longevity model. Answer concisely."},
+    {"role": "system", "content": ("You are a biomedical AI specialized in aging biology, "
+                                   "trained on genomic, proteomic, and clinical data.")},
     {"role": "user", "content": (
-        "Patient: age 67, male, never-smoker, SBP 130, BMI 26. "
-        "Will this person survive at least 10 years? Reply with JSON "
-        '{"answer":"yes|no","reasoning":"..."}.')},
+        "Patient: age 67, male, never-smoker, SBP 130, BMI 26.\n\n"
+        "Will this person survive at least 10 years?\n\nOptions: A. Yes  B. No\n\n"
+        "Reason briefly, then on the FINAL line output exactly: Answer: <letter>")},
 ]
 
 
 def main():
     print(f"base_url = {config.LONGEVITY_BASE_URL}")
     print(f"model    = {config.LONGEVITY_MODEL}")
-    print(f"HF_TOKEN = {'set' if config.HF_TOKEN else 'MISSING — fill .env'}\n")
-    res = chat(PROBE, max_tokens=200)
+    print(f"MODEL_ACCESS_TOKEN = {'set' if config.MODEL_ACCESS_TOKEN else 'MISSING — fill .env'}\n")
+    res = chat(PROBE, max_tokens=400)
     if not res.ok:
         print(f"FAIL after retries: {res.error}")
         print("\nTroubleshooting: endpoint may be scaled-to-zero (wait ~1 min and retry), "

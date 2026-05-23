@@ -1,51 +1,57 @@
-# Red-Flag Clinical-Reasoning Benchmark
+# Mouse-Longevity Benchmark (Caltech Longevity Hackathon — Track 01)
 
-Caltech Longevity Hackathon — **Track 01: LongevityLLM Benchmarking**. We build a
-JSONL/ChatML benchmark that tests whether Insilico's **Longevity-LLM (Qwen3.5-9B)**
-derives a high-level phenotype (10-yr mortality) from low-level NHANES clinical data —
-and whether it reasons about clinical *context* or reacts to scary keywords.
+A JSONL/ChatML benchmark that **extends LongevityBench** to mouse genetics: give the model a
+mouse **genotype (allele set + zygosity) + the strain's phenotype profile (excluding lifespan)**
+and have it **predict the survival/lifespan effect**, scored against the **recorded MGI/IMPC label**.
+Mirrors the original NHANES method (measurements → mortality), with an added genotype input.
 
-**The deliverable is the dataset** (`benchmark.jsonl`), not a demo. Judged on Utility /
-Diversity / Retrieval-Resistance / Statistical-Rigor (20 pts). Full plan in the vault:
-`vault/shared/caltech-hackathon-2026/` (build-plan, grading-rubric-spec, task-authoring-worksheet, deck→README).
+> Repo name `longevity-redflag-bench` is legacy (we pivoted from an NHANES red-flag idea). Plan + rationale: vault `caltech-hackathon-2026/build-plan.md`.
+
+**The dataset is the deliverable** — judged on Utility / Diversity / Retrieval-Resistance / Statistical-Rigor. No demo/leaderboard score.
 
 ## Quickstart
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # fill HF_TOKEN (and ANTHROPIC_API_KEY for the bonus judge)
-
-python scripts/smoke_endpoint.py                                   # hour-0: endpoint alive?
-python scripts/contamination_probe.py                              # hour-0: model recognize NHANES?
-python mock/make_mock.py                                           # build mock records
-python validate/validate_jsonl.py mock/mock_records.jsonl --min-per-task 1   # gate works
+cp .env.example .env          # MODEL_ACCESS_TOKEN (endpoint) + HF_TOKEN (dataset) — set a LONG expiry
+python scripts/smoke_endpoint.py                              # endpoint alive? (model id: longevity-llm)
+python scripts/build_mgi_dataset.py /tmp/mgi.rpt /tmp/mp.obo  # build data/mgi_genotype_phenotype.csv
+python validate/validate_jsonl.py mock/mock_records.jsonl --min-per-task 1
 ```
 
-## The contract
-`schema/records.py :: BenchmarkRecord` is the single shared interface. A submission line
-is `record.model_dump_json()`. **Don't change a field without telling the team.** Build
-against `mock/mock_records.jsonl` until the real NHANES cohort lands.
+## The contract — LongevityBench format (unchanged)
+`schema/records.py :: BenchmarkRecord` mirrors the real LongevityBench schema (`lb_id, pool,
+display_name, display_group, domain, format, metric, units, messages, task, has_reasoning, metadata`).
+Gold = trailing `assistant` turn; our verifiable GT + `condition` (ablation) live in `metadata`.
 
-## Ground truth (3 layers — see build-plan.md §2)
-- **A / absolute:** real profile → real linked outcome (`binary_survival`, `ordinal_risk`, `regression`)
-- **B / relative:** counterfactual red-flag effect (`pairwise_counterfactual`, `set_generation`) — direction + matched-cohort band
-- **C / bonus:** reasoning-verification scorer (`src/score/deterministic.py` + `judge.py`)
+## Tasks
+Input = genotype + phenotype profile → predict survival. Each rendered in **two ablation conditions**
+(`metadata.condition`): `geno+pheno` and `pheno-only` (alleles removed) — the reasoning-vs-recall probe.
+
+- **LB-0138 `mgi_survival_binary`** (binary/accuracy) — impairs survival? balanced. **Primary.**
+- **LB-0142 `impc_viability`** (multiclass/accuracy) — viable / subviable / lethal (IMPC).
+- **LB-0146 `mgi_genotype_pairwise`** (pairwise/accuracy) — which genotype is more deleterious.
+- *(stretch)* regression on % lifespan (SynergyAge/MPD), MAE.
+
+## Ground truth & data
+- **MGI** `MGI_PhenoGenoMP.rpt` → `data/mgi_genotype_phenotype.csv` (74,573 genotypes; 19,816 impair survival, 54,757 no-mortality, 69,606 with a phenotype profile). Mortality/aging MP subtree = label; other MP terms = phenotype input; PubMed IDs = provenance.
+- **IMPC** Solr API (CC-BY-4.0, no token) → viability viable/subviable/lethal + zygosity.
+- **GenAge** = famous-gene **blocklist** (contamination control). **MP ontology** `mp.obo` = label/phenotype split.
+- Labels are real lab assays (IMPC) or cited papers (MGI PMID) — never model-generated.
+
+## Statistical rigor
+Split **by gene** (same gene never spans train/test); balance the binary task; report balanced-accuracy/F1/MCC; baselines = majority-class (exposes the model's default-to-no-effect bias) + a phenotype-count classifier.
+
+## Model behavior (verified live)
+vLLM-served `longevity-llm`, **28K** context, ignores JSON → end prompts with `Answer: <letter>` + `max_tokens≥400`; emits `<think>` traces; ~8s/call (parallelize). Probe: correct on famous Sirt6 (contamination), wrong/defaults to "no effect" on obscure Clint1 (resistant + measurable).
 
 ## Who owns what
-| Person | Start here | Builds |
-|---|---|---|
-| **Anderson** | `src/generate/tasks.py` | task generators, profile render/perturb, model run+parse, scorer, `run_all.py` |
-| **CS teammate** | `src/nhanes/build_cohort.py` | NHANES acquire/join/**censoring**, baselines, matched-cohort effects |
-| **Bio 1** | `tasks/redflags.csv` | red-flag table: direction + HR band + citation (no git) |
-| **Bio 2** | `tasks/context_cases.yaml` | keyword-traps + biological-correctness criteria + citations (no git) |
-
-## How we work (lean — co-located, 32h)
-- One repo, short-lived per-person branches, merge to `main` freely; **say it out loud** before merging. No required reviews.
-- The **schema is the coordination mechanism**, not a board. Lock it; develop against mock.
-- Bio teammates edit `tasks/*` in-repo or a shared doc — no git ceremony required.
-- **Validate before every freeze:** `python validate/validate_jsonl.py outputs/benchmark.jsonl` must PASS.
-- `data/` and `outputs/` are gitignored. **Never commit `.env` / `HF_TOKEN`.**
+| Person | Builds |
+|---|---|
+| **Anderson** | MGI/IMPC loaders, task generators (both ablation conditions), eval harness, metrics |
+| **CS teammate** | IMPC API pull, baselines, split-by-gene, JSONL validator, Δ_recall viz |
+| **Bio 1/2** | `tasks/` — GenAge famous-gene blocklist, meaningful-vs-leaky phenotype selection, label sanity, citations |
 
 ## Runnable now vs stubbed
-- **Runnable:** smoke test, contamination probe, mock generator, validator, model client, parser, metrics, red-flag loader, bonus scorer.
-- **Stubs (locked signatures, `# TODO(owner)`):** `src/nhanes/*`, `src/generate/*`, `src/baselines/*`, `run_all.py` wiring.
+- **Runnable:** `smoke_endpoint`, `build_mgi_dataset` (→ CSV), `validate_jsonl`, model client, parser.
+- **Stubs (`# TODO`):** `src/data/{mgi,impc}.py` loaders, the task generators, baselines.

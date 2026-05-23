@@ -9,3 +9,4 @@ anthropic>=0.40
 pyyaml>=6.0
 pyreadstat>=1.2
 requests>=2.31
+python-dotenv>=1.0

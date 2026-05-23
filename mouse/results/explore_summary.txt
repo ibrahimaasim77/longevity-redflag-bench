@@ -1,0 +1,82 @@
+======================================================================
+DATA: yuan2_animaldata.csv  shape=(1778, 5)
+======================================================================
+strains    : 31
+sexes      : ['f', 'm']
+mice total : 1778 unique  (1778 rows)
+lifespan   : min=202d  median=715d  max=1284d  (3.5 years)
+
+======================================================================
+PER-STRAIN × SEX SUMMARY (sorted by median lifespan, descending)
+======================================================================
+Top 10 longest-lived strain×sex groups:
+     strain sex  n median mean std q25  q75 iqr
+    WSB/EiJ   f 31    964  878 342 692 1169 477
+    WSB/EiJ   m 32    952  809 362 450 1096 646
+   C57BL/6J   m 32    901  894 114 835  952 116
+  C57BL/10J   f 32    888  828 231 662  984 322
+129S1/SvImJ   m 32    879  878 131 798  990 192
+  C57BR/cdJ   f 32    876  806 205 783  922 138
+   C57BL/6J   f 29    866  856 185 776  999 223
+    RIIIS/J   m 32    860  847 108 776  940 164
+    PWD/PhJ   f 31    854  807 173 688  940 252
+  C57BLKS/J   f 32    853  739 217 588  888 300
+
+Bottom 10 shortest-lived strain×sex groups:
+               strain sex  n median mean std q25 q75 iqr
+               KK/HlJ   f 31    593  592  98 544 646 101
+            NZO/HlLtJ   f 32    568  548 188 396 689 292
+BTBR T<+> Itpr3<tf>/J   m 32    568  592 158 442 718 276
+              MRL/MpJ   f 30    556  544 111 429 638 209
+              BUB/BnJ   m 24    550  594 256 354 873 519
+                SJL/J   m 15    514  510 118 476 571  94
+                 PL/J   m 32    462  471 131 365 556 191
+                SJL/J   f 30    462  490 156 370 592 222
+            NZO/HlLtJ   m 31    423  463 199 283 627 344
+                 PL/J   f 32    408  462 135 383 520 137
+
+======================================================================
+SEX EFFECT (pooled across all strains)
+======================================================================
+  n_male   =  839  median = 728d  mean = 703.3d
+  n_female =  939  median = 701d  mean = 690.0d
+  Welch t-test (means)  : t=1.345  p=1.79e-01
+  Mann-Whitney U (ranks): U=413769  p=6.61e-02
+  Median delta (m-f)    : +27 days
+
+======================================================================
+STRAIN EFFECT (across all 31 strains, sex-pooled)
+======================================================================
+  Kruskal-Wallis: H=517.3  p=3.34e-90  df=30
+  longest-lived strain   : WSB/EiJ  (964d)
+  shortest-lived strain  : PL/J  (431d)
+  spread (max - min med.): 533d (1.5 years)
+
+======================================================================
+VARIANCE PARTITION (η² from one-way and two-way ANOVA-style decomposition)
+======================================================================
+  strain only        : η² = 0.270  (27.0% of variance)
+  sex only           : η² = 0.001  (0.1% of variance)
+  strain + sex combo : η² = 0.288  (28.8% of variance)
+  unexplained        : 71.2% — within-strain×sex biological/environmental noise
+
+======================================================================
+WITHIN-STRAIN SEX EFFECT (median male − median female), top 5 each direction
+======================================================================
+Strains where MALES outlive females the most:
+sex           f   m delta_m_minus_f
+strain                             
+SWR/J       654 714              60
+RIIIS/J     792 860              68
+MRL/MpJ     556 639              84
+NON/ShiLtJ  750 844              94
+129S1/SvImJ 780 879              98
+
+Strains where FEMALES outlive males the most:
+sex         f   m delta_m_minus_f
+strain                           
+FVB/NJ    777 594            -182
+NZO/HlLtJ 568 423            -146
+C57BL/10J 888 785            -103
+BUB/BnJ   624 550             -74
+BALB/cByJ 771 710             -60

@@ -23,7 +23,7 @@ from openai import OpenAI
 
 BASE_URL = os.environ.get(
     "LONGEVITY_BASE_URL",
-    "https://sqrq2pj09htgequ0.us-east-2.aws.endpoints.huggingface.cloud/v1",
+    "https://swchnq0ekc3scmqw.us-east-2.aws.endpoints.huggingface.cloud/v1",
 )
 MODEL = os.environ.get("LONGEVITY_MODEL", "longevity-llm")
 # Prefer env var; fall back to the hackathon token (may be revoked).

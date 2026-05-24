@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0A0A0A;
+  color: #F2EEE6;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 3px;
+}
+
+@layer utilities {
+  .glow-green {
+    box-shadow: 0 0 30px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 255, 136, 0.05);
+  }
+  .glow-red {
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.15), 0 0 60px rgba(255, 68, 68, 0.05);
+  }
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.15), 0 0 60px rgba(255, 215, 0, 0.05);
+  }
+  .glow-green-text {
+    text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  }
+  .glow-red-text {
+    text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+  }
+  .glow-gold-text {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glass-green {
+    background: rgba(0, 255, 136, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+  }
+  .glass-red {
+    background: rgba(255, 68, 68, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 68, 68, 0.2);
+  }
+  .glass-gold {
+    background: rgba(255, 215, 0, 0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+  }
+}

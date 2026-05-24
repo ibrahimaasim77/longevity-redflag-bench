@@ -1,0 +1,107 @@
+{
+  "dataset": {
+    "total_genotypes": 74573,
+    "mortality_category": {
+      "death": 18465,
+      "none": 54741,
+      "reversed": 407,
+      "conditional": 807,
+      "reproductive": 72,
+      "ambiguous": 75,
+      "contradictory": 6
+    },
+    "death_by_stage": {
+      "developmental": 12445,
+      "adult_aging": 3640,
+      "postnatal": 2178,
+      "unspecified": 202
+    },
+    "primary_system_top": {
+      "behavior/neurological": 6679,
+      "homeostasis/metabolism": 6504,
+      "hematopoietic system": 6013,
+      "nervous system": 5372,
+      "immune system": 4878,
+      "cardiovascular system": 4762,
+      "embryo": 2870,
+      "growth/size/body region": 2776,
+      "skeleton": 2520,
+      "endocrine/exocrine gland": 1996,
+      "digestive/alimentary": 1076,
+      "renal/urinary system": 1025,
+      "respiratory system": 549,
+      "liver/biliary system": 492
+    }
+  },
+  "label_correction": {
+    "note": "Original build mislabeled any mortality-ontology term as 'impairs survival'.",
+    "reversed_flipped_to_negative": 407,
+    "contradictory_excluded": 6,
+    "root_leak_profiles_cleaned": 18,
+    "total_excluded": 960
+  },
+  "aging_direction": {
+    "extends": { "all": 98, "usable": 51 },
+    "shortens": { "all": 4186, "usable": 3354 },
+    "protective": { "all": 319, "usable": 286 },
+    "mixed": 4
+  },
+  "benchmark_composition": {
+    "controlled": {
+      "n": 120,
+      "pos": 60,
+      "neg": 60,
+      "n_systems": 12,
+      "positive_stage": { "adult_aging": 48, "developmental": 12 }
+    },
+    "random": {
+      "n": 120,
+      "pos": 60,
+      "neg": 60,
+      "n_systems": 18,
+      "positive_stage": { "developmental": 43, "adult_aging": 14, "postnatal": 3 }
+    }
+  },
+  "eval": {
+    "model": "Longevity-LLM",
+    "set": "controlled",
+    "n_prompts": 240,
+    "delta_recall": 0.125,
+    "by_condition": {
+      "geno_pheno": {
+        "accuracy": 0.808,
+        "balanced_accuracy": 0.81,
+        "mcc": 0.62,
+        "sensitivity": 0.85,
+        "specificity": 0.77,
+        "confusion": { "tp": 51, "fp": 14, "fn": 9, "tn": 46 }
+      },
+      "pheno_only": {
+        "accuracy": 0.683,
+        "balanced_accuracy": 0.68,
+        "mcc": 0.37,
+        "sensitivity": 0.77,
+        "specificity": 0.60,
+        "confusion": { "tp": 46, "fp": 24, "fn": 14, "tn": 36 }
+      }
+    },
+    "by_stage": {
+      "adult_aging": { "geno_pheno": 0.83, "pheno_only": 0.75 },
+      "developmental": { "geno_pheno": 0.92, "pheno_only": 0.83 }
+    },
+    "by_system": {
+      "immune system": { "geno_pheno": 1.00, "pheno_only": 0.90 },
+      "homeostasis/metabolism": { "geno_pheno": 0.90, "pheno_only": 0.70 },
+      "nervous system": { "geno_pheno": 0.90, "pheno_only": 0.70 },
+      "skeleton": { "geno_pheno": 0.90, "pheno_only": 0.80 },
+      "growth/size/body region": { "geno_pheno": 0.80, "pheno_only": 0.90 },
+      "digestive/alimentary": { "geno_pheno": 0.80, "pheno_only": 0.70 },
+      "liver/biliary system": { "geno_pheno": 0.80, "pheno_only": 0.60 },
+      "renal/urinary system": { "geno_pheno": 0.80, "pheno_only": 0.70 },
+      "endocrine/exocrine gland": { "geno_pheno": 0.80, "pheno_only": 0.70 },
+      "cardiovascular system": { "geno_pheno": 0.70, "pheno_only": 0.40 },
+      "hematopoietic system": { "geno_pheno": 0.70, "pheno_only": 0.50 },
+      "respiratory system": { "geno_pheno": 0.60, "pheno_only": 0.60 }
+    }
+  }
+}

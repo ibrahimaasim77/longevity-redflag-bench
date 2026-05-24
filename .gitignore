@@ -14,6 +14,10 @@ venv/
 *.egg-info/
 .pytest_cache/
 
+# dashboard
+dashboard/node_modules/
+dashboard/dist/
+
 # os/editor
 .DS_Store
 .vscode/
